@@ -1,9 +1,31 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { dataSourceOptions } from 'data-source';
+import { UserModule } from './user/user.module';
+import { RequestModule } from './requests/request.module';
+import { ApprovalModule } from './approvals/approval.module';
+import { CustomerModule } from './customers/customer.module';
+import { IntegritySettingModule } from './integrity/integrity.module';
+import { NotificationModule } from './notifications/notification.module';
+import { CheckInOutModule } from './checkinout/checkinout.module';
 
 @Module({
-  imports: [],
+  imports: [
+    TypeOrmModule.forRootAsync({
+      imports: [],
+      useFactory: () => dataSourceOptions,
+    }),
+
+    UserModule,
+    RequestModule,
+    ApprovalModule,
+    CustomerModule,
+    IntegritySettingModule,
+    NotificationModule,
+    CheckInOutModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
