@@ -10,6 +10,7 @@ import { CustomerModule } from './customers/customer.module';
 import { IntegritySettingModule } from './integrity/integrity.module';
 import { NotificationModule } from './notifications/notification.module';
 import { CheckInOutModule } from './checkinout/checkinout.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { CheckInOutModule } from './checkinout/checkinout.module';
       imports: [],
       useFactory: () => dataSourceOptions,
     }),
-
+    AuthModule,
     UserModule,
     RequestModule,
     ApprovalModule,
