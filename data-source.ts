@@ -1,5 +1,5 @@
 import 'dotenv/config'; // this loads .env variables globally
-import { Approval } from 'src/approvals/approval.entity';
+import { Approval } from 'src/approvals/approvals.entity';
 import { CheckInOut } from 'src/checkinout/checkinout.entity';
 import { Customer } from 'src/customers/customer.entity';
 import { IntegritySetting } from 'src/integrity/integriry.entity';

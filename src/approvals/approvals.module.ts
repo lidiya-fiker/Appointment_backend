@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Approval } from './approval.entity';
+import { Approval } from './approvals.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Approval])],

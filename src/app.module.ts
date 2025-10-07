@@ -5,12 +5,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from 'data-source';
 import { UserModule } from './user/user.module';
 import { RequestModule } from './requests/request.module';
-import { ApprovalModule } from './approvals/approval.module';
+
 import { CustomerModule } from './customers/customer.module';
 import { IntegritySettingModule } from './integrity/integrity.module';
 import { NotificationModule } from './notifications/notification.module';
 import { CheckInOutModule } from './checkinout/checkinout.module';
 import { AuthModule } from './auth/auth.module';
+import { ApprovalModule } from './approvals/approvals.module';
 
 @Module({
   imports: [

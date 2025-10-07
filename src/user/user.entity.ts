@@ -1,4 +1,5 @@
 import { Exclude } from 'class-transformer';
+import { CheckInOut } from 'src/checkinout/checkinout.entity';
 import { Request } from 'src/requests/request.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
@@ -46,4 +47,10 @@ export class User {
 
   @OneToMany(() => Request, (request) => request.createdBy)
   createdRequests: Request[];
+
+  @OneToMany(() => CheckInOut, (check) => check.checkedInBy)
+  checkedInRecords: CheckInOut[];
+
+  @OneToMany(() => CheckInOut, (check) => check.checkedOutBy)
+  checkedOutRecords: CheckInOut[];
 }

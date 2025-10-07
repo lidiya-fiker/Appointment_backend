@@ -1,4 +1,4 @@
-import { Approval } from 'src/approvals/approval.entity';
+import { Approval } from 'src/approvals/approvals.entity';
 import { Customer } from 'src/customers/customer.entity';
 import { User } from 'src/user/user.entity';
 import {
@@ -23,7 +23,10 @@ export class Request {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Customer, (customer) => customer.requests)
+  @ManyToOne(() => Customer, (customer) => customer.requests, {
+    cascade: true,
+    eager: true,
+  })
   customer: Customer;
 
   @ManyToOne(() => User, (user) => user.createdRequests)
@@ -44,10 +47,6 @@ export class Request {
   @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
   status: RequestStatus;
 
-  @OneToOne(() => Approval, (approval) => approval.request, { cascade: true })
-  @JoinColumn()
-  approval: Approval;
-
   @Column({ nullable: true })
   reassignedDate?: string;
 
@@ -56,4 +55,8 @@ export class Request {
 
   @Column({ nullable: true })
   reassignedTimeTo?: string;
+
+  @OneToOne(() => Approval, (approval) => approval.request, { cascade: true })
+  @JoinColumn()
+  approval: Approval;
 }
