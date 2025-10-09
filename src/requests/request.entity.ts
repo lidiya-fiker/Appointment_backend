@@ -1,14 +1,17 @@
-import { Approval } from 'src/approvals/approvals.entity';
-import { Customer } from 'src/customers/customer.entity';
-import { User } from 'src/user/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  JoinColumn,
   OneToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
+import { Customer } from 'src/customers/customer.entity';
+import { Approval } from 'src/approvals/approvals.entity';
+import { User } from 'src/user/user.entity';
+import { CheckInOut } from 'src/checkinout/checkinout.entity';
 
 export enum RequestStatus {
   PENDING = 'pending',
@@ -16,6 +19,7 @@ export enum RequestStatus {
   REASSIGNED = 'reassigned',
   REJECTED = 'rejected',
   COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 @Entity()
@@ -23,14 +27,11 @@ export class Request {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Customer, (customer) => customer.requests, {
-    cascade: true,
-    eager: true,
-  })
+  @ManyToOne(() => Customer, (c) => c.requests, { cascade: true, eager: true })
   customer: Customer;
 
-  @ManyToOne(() => User, (user) => user.createdRequests)
-  createdBy: User; // front desk or ceo
+  @ManyToOne(() => User, (user) => user.createdRequests, { eager: true })
+  createdBy: User;
 
   @Column({ type: 'date' })
   appointmentDate: string;
@@ -41,7 +42,7 @@ export class Request {
   @Column()
   timeTo: string;
 
-  @Column()
+  @Column({ nullable: true })
   purpose: string;
 
   @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
@@ -56,7 +57,16 @@ export class Request {
   @Column({ nullable: true })
   reassignedTimeTo?: string;
 
-  @OneToOne(() => Approval, (approval) => approval.request, { cascade: true })
+  @OneToOne(() => Approval, (a) => a.request, { cascade: true, eager: true })
   @JoinColumn()
   approval: Approval;
+
+  @OneToOne(() => CheckInOut, (c) => c.request, { cascade: true })
+  checkInOut: CheckInOut;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

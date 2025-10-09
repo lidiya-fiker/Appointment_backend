@@ -1,30 +1,30 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { Gender } from '../user.entity';
 
 export class UpdateProfileDto {
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'First name of the user' })
   @IsOptional()
   @IsString()
   firstName?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Last name of the user' })
   @IsOptional()
   @IsString()
   lastName?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Phone number of the user' })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ enum: Gender, description: 'Gender of the user' })
   @IsOptional()
-  @IsString()
-  gender?: string;
+  @IsEnum(Gender)
+  gender?: Gender;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Profile photo URL' })
   @IsOptional()
   @IsString()
-  photo?: Gender;
+  photo?: string;
 }

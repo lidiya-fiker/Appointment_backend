@@ -1,53 +1,46 @@
-import {
-  Controller,
-  Post,
-  Patch,
-  Get,
-  Param,
-  Body,
-  ParseUUIDPipe,
-} from '@nestjs/common';
+import { Controller, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { ApprovalsService } from './approvals.service';
 import { ApproveRequestDto } from './dto/approve-request.dto';
 import { RejectRequestDto } from './dto/reject-request.dto';
 import { ReassignRequestDto } from './dto/reassign-request.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+import { Permission } from 'src/common/decorators/permissions.decorator';
 
 @ApiTags('Approvals')
 @Controller('approvals')
 export class ApprovalsController {
-  constructor(private readonly approvalsService: ApprovalsService) {}
+  constructor(private svc: ApprovalsService) {}
 
-  @ApiOperation({ summary: 'Approve a pending request' })
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permission('approve_request')
+  @ApiBearerAuth()
   @Post(':id/approve')
-  async approve(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ApproveRequestDto,
-  ) {
-    return this.approvalsService.approve(id, dto);
+  approve(@Param('id') id: string, @Body() dto: ApproveRequestDto) {
+    return this.svc.approve(id, dto);
   }
 
-  @ApiOperation({ summary: 'Reject a pending request' })
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permission('approve_request')
+  @ApiBearerAuth()
   @Post(':id/reject')
-  async reject(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: RejectRequestDto,
-  ) {
-    return this.approvalsService.reject(id, dto);
+  reject(@Param('id') id: string, @Body() dto: RejectRequestDto) {
+    return this.svc.reject(id, dto);
   }
 
-  @ApiOperation({ summary: 'Reassign appointment date and time' })
-  @Patch(':id/reassign')
-  async reassign(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ReassignRequestDto,
-  ) {
-    return this.approvalsService.reassign(id, dto);
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permission('approve_request')
+  @ApiBearerAuth()
+  @Post(':id/reassign')
+  reassign(@Param('id') id: string, @Body() dto: ReassignRequestDto) {
+    return this.svc.reassign(id, dto);
   }
 
-  @ApiOperation({ summary: 'Get all approvals' })
-  @Get()
-  async findAll() {
-    return this.approvalsService.findAll();
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post(':id/cancel')
+  cancel(@Param('id') id: string) {
+    return this.svc.cancel(id);
   }
 }

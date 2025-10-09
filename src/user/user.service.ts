@@ -2,33 +2,35 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
-import { UpdateProfileDto } from './dto/update-profile.dto';
-import { instanceToPlain } from 'class-transformer';
+
+import { Role } from 'src/roles/role.entity';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Role) private roleRepo: Repository<Role>,
   ) {}
 
-  async updateProfile(
-    id: string,
-    updateProfileDto: UpdateProfileDto,
-  ): Promise<Record<string, any>> {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+  // Update profile
+  async updateProfile(id: string, patch: Partial<User>) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
 
-    Object.assign(user, updateProfileDto);
+    Object.assign(user, patch);
+    const saved = await this.userRepo.save(user);
 
-    const updated = await this.userRepository.save(user);
-    return instanceToPlain(updated);
+    // Remove password before returning
+    const { password: _, ...rest } = saved as any;
+    return rest;
   }
 
-  async getAllUsers(): Promise<Record<string, any>[]> {
-    const users = await this.userRepository.find();
-    return users.map((user) => instanceToPlain(user));
+  // List all users
+  async listAll() {
+    const users = await this.userRepo.find({ relations: ['role'] }); // singular relation
+    return users.map((u) => {
+      const { password: _, ...rest } = u as any;
+      return rest;
+    });
   }
 }

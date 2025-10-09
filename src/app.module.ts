@@ -12,6 +12,7 @@ import { NotificationModule } from './notifications/notification.module';
 import { CheckInOutModule } from './checkinout/checkinout.module';
 import { AuthModule } from './auth/auth.module';
 import { ApprovalModule } from './approvals/approvals.module';
+import { RoleModule } from './roles/role.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ApprovalModule } from './approvals/approvals.module';
     IntegritySettingModule,
     NotificationModule,
     CheckInOutModule,
+    RoleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

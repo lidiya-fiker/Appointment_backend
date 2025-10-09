@@ -1,20 +1,22 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+  Unique,
+} from 'typeorm';
+import { Role } from 'src/roles/role.entity';
 import { Exclude } from 'class-transformer';
-import { CheckInOut } from 'src/checkinout/checkinout.entity';
 import { Request } from 'src/requests/request.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
-export enum UserRole {
-  CEO = 'ceo',
-  FRONT_DESK = 'front_desk',
-  SECRETARY = 'secretary',
-  SECURITY = 'security',
-}
 export enum Gender {
   MALE = 'male',
   FEMALE = 'female',
 }
 
 @Entity()
+@Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,16 +24,18 @@ export class User {
   @Column()
   email: string;
 
-  @Column()
   @Exclude()
+  @Column()
   password: string;
 
-  // CEO has profile info; others are created by CEO
   @Column({ nullable: true })
   firstName?: string;
 
   @Column({ nullable: true })
   lastName?: string;
+
+  @Column({ nullable: true })
+  middleName?: string;
 
   @Column({ nullable: true })
   phone?: string;
@@ -42,15 +46,13 @@ export class User {
   @Column({ nullable: true })
   photo?: string;
 
-  @Column({ type: 'enum', enum: UserRole })
-  role: UserRole;
+  @ManyToOne(() => Role, (role) => role.users, {
+    eager: true,
+    nullable: false,
+    onDelete: 'RESTRICT',
+  })
+  role: Role;
 
-  @OneToMany(() => Request, (request) => request.createdBy)
-  createdRequests: Request[];
-
-  @OneToMany(() => CheckInOut, (check) => check.checkedInBy)
-  checkedInRecords: CheckInOut[];
-
-  @OneToMany(() => CheckInOut, (check) => check.checkedOutBy)
-  checkedOutRecords: CheckInOut[];
+  @OneToMany(() => Request, (request) => request.createdBy, { lazy: true })
+  createdRequests: Promise<Request[]>;
 }

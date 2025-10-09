@@ -2,70 +2,68 @@ import {
   Controller,
   Post,
   Body,
+  UseGuards,
+  Req,
   Get,
   Query,
-  Req,
-  UseGuards,
+  Patch,
   Param,
   Delete,
-  Patch,
 } from '@nestjs/common';
-
-import { CreateRequestDto } from './dto/create-request.dto';
-import { FilterRequestDto } from './dto/filter-request.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RequestsService } from './request.service';
-import { UserRole } from 'src/user/user.entity';
+import { CreateRequestDto } from './dto/create-request.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { UpdateRequestDto } from './dto/update-request.dto';
+import { User } from 'src/user/user.entity';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+import { Permission } from 'src/common/decorators/permissions.decorator';
+import { FilterRequestDto } from './dto/filter-request.dto';
 
 @ApiTags('Requests')
 @Controller('requests')
 export class RequestsController {
-  constructor(private readonly requestsService: RequestsService) {}
+  constructor(private readonly svc: RequestsService) {}
 
-  // front desk creates customer + request
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permission('create_appointment')
   @ApiBearerAuth()
-  @Roles(UserRole.CEO, UserRole.FRONT_DESK)
   @Post()
   async create(@Body() dto: CreateRequestDto, @Req() req) {
-    const user = req.user; // front desk
-    return await this.requestsService.create(dto, user);
+    const user: User = req.user;
+    return this.svc.create(dto, user);
   }
 
-  // filter by status or date range
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get()
-  async filter(@Query() filter: FilterRequestDto) {
-    return await this.requestsService.filter(filter);
+  @ApiBearerAuth()
+  async findAll(@Query() query: FilterRequestDto) {
+    const { status, fromDate, toDate } = query;
+    return this.svc.filter(status, fromDate, toDate);
   }
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('all')
-  async findAll() {
-    return this.requestsService.findAll();
+  findAllRaw() {
+    return this.svc.findAll();
   }
 
-  // Update a request
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
-  @Roles(UserRole.CEO, UserRole.FRONT_DESK)
+  @Roles('front_desk', 'ceo')
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateRequestDto) {
-    return await this.requestsService.update(id, updateDto);
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.svc.update(id, body);
   }
 
-  // Delete a request
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
-  @Roles(UserRole.CEO, UserRole.FRONT_DESK)
+  @Roles('front_desk', 'ceo')
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return await this.requestsService.remove(id);
+  remove(@Param('id') id: string) {
+    return this.svc.remove(id);
   }
 }

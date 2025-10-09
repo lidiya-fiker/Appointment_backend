@@ -1,31 +1,67 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+// src/auth/auth.controller.ts
+import {
+  Controller,
+  Post,
+  Body,
+  Request,
+  UseGuards,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from 'src/user/user.entity';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { UpdateRolePermissionsDto } from 'src/roles/dto/update-role-permissions.dto';
 
-@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @Roles(UserRole.CEO)
+  // 🔹 CEO creates a user
+  @UseGuards(JwtAuthGuard)
   @Post('signup')
-  signup(@Body() singupDto: SignupDto) {
-    const { firstName, lastName, email, password, role } = singupDto;
-    return this.authService.signup(firstName, lastName, email, password, role);
+  @ApiBearerAuth()
+  async signup(@Body() dto: SignupDto, @Request() req) {
+    return this.authService.signup(dto, req.user);
   }
 
+  // 🔹 Login
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    const { email, password } = loginDto;
-    const user = await this.authService.validateUser(email, password);
-    return this.authService.login(user);
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
+
+  // 🔹 Grant permission to role
+  @UseGuards(JwtAuthGuard)
+  @Post('roles/grant-multiple/:roleName')
+  @ApiBearerAuth()
+  async grantMultiple(
+    @Param('roleName') roleName: string,
+    @Body() dto: UpdateRolePermissionsDto,
+    @Req() req,
+  ) {
+    return this.authService.grantPermissionsToRole(
+      roleName,
+      dto.permissionKeys,
+      req.user,
+    );
+  }
+
+  // 🔹 Revoke permission from role
+  @UseGuards(JwtAuthGuard)
+  @Post('roles/revoke-multiple/:roleName')
+  @ApiBearerAuth()
+  async revokeMultiple(
+    @Param('roleName') roleName: string,
+    @Body() dto: UpdateRolePermissionsDto,
+    @Req() req,
+  ) {
+    return this.authService.revokePermissionsFromRole(
+      roleName,
+      dto.permissionKeys,
+      req.user,
+    );
   }
 }

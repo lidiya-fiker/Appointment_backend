@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-export enum IntegrityPeriod {
-  MONTHLY = 'monthly',
-  YEARLY = 'yearly',
+export enum Period {
+  MONTH = 'month',
+  YEAR = 'year',
 }
 
 @Entity()
@@ -10,15 +10,9 @@ export class IntegritySetting {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'enum', enum: IntegrityPeriod })
-  period: IntegrityPeriod; // monthly or yearly
+  @Column({ type: 'enum', enum: Period })
+  period: Period;
 
-  @Column()
-  goldVisits: number;
-
-  @Column()
-  silverVisits: number;
-
-  @Column()
-  platinumVisits: number;
+  @Column({ type: 'jsonb' })
+  tiers: { name: string; visits: number }[]; // e.g. [{name: 'gold', visits:15},...]
 }

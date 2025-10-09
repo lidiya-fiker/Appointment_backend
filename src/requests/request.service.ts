@@ -1,14 +1,10 @@
-// In your RequestsService
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Request, RequestStatus } from './request.entity';
 import { Customer } from 'src/customers/customer.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { FilterRequestDto } from './dto/filter-request.dto';
 import { User } from 'src/user/user.entity';
-import { instanceToPlain } from 'class-transformer';
-import { UpdateRequestDto } from './dto/update-request.dto';
 
 @Injectable()
 export class RequestsService {
@@ -17,148 +13,82 @@ export class RequestsService {
     private readonly requestRepo: Repository<Request>,
     @InjectRepository(Customer)
     private readonly customerRepo: Repository<Customer>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
-  // Create a new request
-  async create(createDto: CreateRequestDto, createdBy: User) {
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      gender,
-      country,
-      city,
-      organization,
-      occupation,
-      appointmentDate,
-      timeFrom,
-      timeTo,
-      purpose,
-    } = createDto;
-
-    let customer = await this.customerRepo.findOne({ where: { email } });
+  async create(dto: CreateRequestDto, createdBy: User) {
+    // create or reuse customer by email
+    let customer = await this.customerRepo.findOne({
+      where: { email: dto.email },
+    });
     if (!customer) {
       customer = this.customerRepo.create({
-        firstName,
-        lastName,
-        email,
-        phone,
-        gender,
-        country,
-        city,
-        organization,
-        occupation,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        email: dto.email,
+        phone: dto.phone,
+        gender: dto.gender,
+        country: dto.country,
+        city: dto.city,
+        organization: dto.organization,
+        occupation: dto.occupation,
       });
       await this.customerRepo.save(customer);
     }
 
     const dbUser = await this.userRepo.findOne({ where: { id: createdBy.id } });
-    if (!dbUser) throw new NotFoundException('Invalid user creating request');
+    if (!dbUser) throw new NotFoundException('Creator user not found');
 
     const request = this.requestRepo.create({
       customer,
       createdBy: dbUser,
-      appointmentDate,
-      timeFrom,
-      timeTo,
-      purpose,
+      appointmentDate: dto.appointmentDate,
+      timeFrom: dto.timeFrom,
+      timeTo: dto.timeTo,
+      purpose: dto.purpose,
       status: RequestStatus.PENDING,
     });
 
-    const savedRequest = await this.requestRepo.save(request);
-    const plain = instanceToPlain(savedRequest) as any;
-
-    // Remove createdBy completely
-    delete plain.createdBy;
-
-    return plain;
+    return await this.requestRepo.save(request);
   }
 
-  async filter(filter: FilterRequestDto) {
-    const where: any = {};
-    if (filter.status) where.status = filter.status;
-    if (filter.fromDate && filter.toDate) {
-      where.appointmentDate = Between(
-        new Date(filter.fromDate),
-        new Date(filter.toDate),
-      );
-    }
-
-    const requests = await this.requestRepo.find({
-      where,
+  async findAll() {
+    return this.requestRepo.find({
       relations: ['customer', 'approval'],
       order: { appointmentDate: 'ASC' },
     });
-
-    const plain = instanceToPlain(requests) as any[];
-    // Remove createdBy from each request
-    plain.forEach((r) => delete r.createdBy);
-
-    return plain;
   }
 
-  // Update a request
-  // ✅ Update request (including nested customer)
-  async update(id: string, updateDto: UpdateRequestDto) {
-    const request = await this.requestRepo.findOne({
+  async filter(status?: RequestStatus, from?: string, to?: string) {
+    const where: any = {};
+    if (status) where.status = status;
+    if (from && to) where.appointmentDate = Between(from, to);
+    return this.requestRepo.find({
+      where,
+      relations: ['customer', 'approval'],
+    });
+  }
+
+  async update(id: string, update: Partial<Request>) {
+    const req = await this.requestRepo.findOne({
       where: { id },
       relations: ['customer'],
     });
-    if (!request) throw new NotFoundException('Request not found');
+    if (!req) throw new NotFoundException('Request not found');
 
-    const { customer: customerDto, ...requestFields } = updateDto;
-
-    // ✅ Update request fields
-    Object.entries(requestFields).forEach(([key, value]) => {
-      if (value !== undefined) (request as any)[key] = value;
-    });
-
-    // ✅ Update nested customer (force update)
-    if (customerDto && request.customer) {
-      await this.customerRepo
-        .createQueryBuilder()
-        .update(Customer)
-        .set(customerDto)
-        .where('id = :id', { id: request.customer.id })
-        .execute();
+    Object.assign(req, update);
+    // if nested customer updated (sent as object on update.customer), save it separately:
+    if ((update as any).customer) {
+      Object.assign(req.customer, (update as any).customer);
+      await this.customerRepo.save(req.customer);
     }
-
-    // ✅ Save request (after customer is updated)
-    const updated = await this.requestRepo.save(request);
-
-    // ✅ Reload customer to return updated data
-    const refreshed = await this.requestRepo.findOne({
-      where: { id: updated.id },
-      relations: ['customer'],
-    });
-
-    const plain = instanceToPlain(refreshed) as any;
-    delete plain.createdBy;
-
-    return plain;
+    return this.requestRepo.save(req);
   }
 
-  // Delete a request
   async remove(id: string) {
-    const request = await this.requestRepo.findOne({ where: { id } });
-    if (!request) throw new NotFoundException('Request not found');
-
-    await this.requestRepo.remove(request);
-    return { message: 'Request deleted successfully' };
-  }
-
-  async findAll(): Promise<any> {
-    const requests = await this.requestRepo.find({
-      relations: ['customer', 'approval'],
-      order: { appointmentDate: 'ASC' },
-    });
-
-    const plain = instanceToPlain(requests) as any[];
-    plain.forEach((r) => delete r.createdBy);
-
-    return plain;
+    const req = await this.requestRepo.findOne({ where: { id } });
+    if (!req) throw new NotFoundException('Request not found');
+    await this.requestRepo.remove(req);
+    return { message: 'deleted' };
   }
 }

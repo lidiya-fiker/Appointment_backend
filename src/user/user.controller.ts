@@ -1,38 +1,26 @@
-import { Controller, Put, Body, UseGuards, Request, Get } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Controller, Body, UseGuards, Req, Get, Put } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateProfileDto } from './dto/update-profile.dto';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from './user.entity';
 
-@ApiTags('User')
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private svc: UserService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update CEO profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden. Only CEO can access' })
-  @Roles(UserRole.CEO)
-  @Put('profile')
-  updateProfile(@Request() req, @Body() dto: UpdateProfileDto) {
-    return this.userService.updateProfile(req.user.id, dto);
+  @Get()
+  list() {
+    return this.svc.listAll();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @Roles(UserRole.CEO)
-  @Get('all')
-  getAllUsers() {
-    return this.userService.getAllUsers();
+  @Put('profile')
+  updateProfile(@Req() req, @Body() body) {
+    return this.svc.updateProfile(req.user.id, body);
   }
 }

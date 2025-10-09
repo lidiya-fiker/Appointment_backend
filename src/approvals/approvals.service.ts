@@ -7,117 +7,137 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Request, RequestStatus } from 'src/requests/request.entity';
 import { ApproveRequestDto } from './dto/approve-request.dto';
-import { instanceToPlain } from 'class-transformer';
-import { Approval } from './approvals.entity';
 import { RejectRequestDto } from './dto/reject-request.dto';
 import { ReassignRequestDto } from './dto/reassign-request.dto';
+import { Approval } from './approvals.entity';
+import { NotificationService } from 'src/notifications/notification.service';
 
 @Injectable()
 export class ApprovalsService {
   constructor(
-    @InjectRepository(Approval)
-    private readonly approvalRepo: Repository<Approval>,
-
-    @InjectRepository(Request)
-    private readonly requestRepo: Repository<Request>,
+    @InjectRepository(Approval) private approvalRepo: Repository<Approval>,
+    @InjectRepository(Request) private requestRepo: Repository<Request>,
+    private notificationSvc: NotificationService,
   ) {}
 
-  // ✅ Approve a request
   async approve(requestId: string, dto: ApproveRequestDto) {
-    const request = await this.requestRepo.findOne({
+    const req = await this.requestRepo.findOne({
       where: { id: requestId },
       relations: ['approval', 'customer'],
     });
-    if (!request) throw new NotFoundException('Request not found');
+    if (!req) throw new NotFoundException('Request not found');
+    if (req.status !== RequestStatus.PENDING)
+      throw new BadRequestException('Only pending can be approved');
 
-    if (request.status !== RequestStatus.PENDING)
-      throw new BadRequestException('Only pending requests can be approved');
+    let approval = req.approval;
+    if (!approval) approval = this.approvalRepo.create();
+    approval.allowedMaterials = dto.allowedMaterials || [];
+    approval.inspectionRequired = !!dto.inspectionRequired;
+    approval.reason = null;
 
-    let approval = request.approval;
-    if (!approval) {
-      approval = this.approvalRepo.create({
-        request,
-        allowedMaterials: dto.allowedMaterials,
-        inspectionRequired: dto.inspectionRequired,
-      });
-    } else {
-      approval.allowedMaterials = dto.allowedMaterials;
-      approval.inspectionRequired = dto.inspectionRequired;
-      approval.reason = null;
-    }
+    approval = await this.approvalRepo.save(approval);
+    req.approval = approval;
+    req.status = RequestStatus.APPROVED;
+    await this.requestRepo.save(req);
 
-    request.status = RequestStatus.APPROVED;
-    request.approval = await this.approvalRepo.save(approval);
-
-    const saved = await this.requestRepo.save(request);
-    return instanceToPlain(saved);
+    // notify secretary / front desk
+    await this.notificationSvc.create({
+      type: 'request_approved',
+      message: `Request for ${req.customer.firstName} approved`,
+      requestId: req.id,
+    });
+    return req;
   }
 
-  // 🚫 Reject a request
   async reject(requestId: string, dto: RejectRequestDto) {
-    const request = await this.requestRepo.findOne({
+    const req = await this.requestRepo.findOne({
       where: { id: requestId },
-      relations: ['approval'],
+      relations: ['approval', 'customer'],
     });
-    if (!request) throw new NotFoundException('Request not found');
+    if (!req) throw new NotFoundException('Request not found');
+    if (req.status !== RequestStatus.PENDING)
+      throw new BadRequestException('Only pending can be rejected');
 
-    if (request.status !== RequestStatus.PENDING)
-      throw new BadRequestException('Only pending requests can be rejected');
+    let approval = req.approval;
+    if (!approval) approval = this.approvalRepo.create();
+    approval.reason = dto.reason;
+    approval.allowedMaterials = null;
+    approval.inspectionRequired = false;
+    approval = await this.approvalRepo.save(approval);
 
-    let approval = request.approval;
-    if (!approval) {
-      approval = this.approvalRepo.create({ request, reason: dto.reason });
-    } else {
-      approval.reason = dto.reason;
-      approval.allowedMaterials = null;
-      approval.inspectionRequired = false;
-    }
+    req.approval = approval;
+    req.status = RequestStatus.REJECTED;
+    await this.requestRepo.save(req);
 
-    request.status = RequestStatus.REJECTED;
-    request.approval = await this.approvalRepo.save(approval);
+    await this.notificationSvc.create({
+      type: 'request_rejected',
+      message: `Request for ${req.customer.firstName} rejected: ${dto.reason}`,
+      requestId: req.id,
+    });
 
-    const saved = await this.requestRepo.save(request);
-    return instanceToPlain(saved);
+    return req;
   }
 
-  // 🔁 Reassign a request (change date/time)
   async reassign(requestId: string, dto: ReassignRequestDto) {
-    const request = await this.requestRepo.findOne({
+    const req = await this.requestRepo.findOne({
       where: { id: requestId },
-      relations: ['approval'],
+      relations: ['approval', 'customer'],
     });
-    if (!request) throw new NotFoundException('Request not found');
+    if (!req) throw new NotFoundException('Request not found');
 
-    if (!dto.reassignedDate || !dto.reassignedTimeFrom || !dto.reassignedTimeTo)
-      throw new BadRequestException('Reassigned date and time are required');
+    req.reassignedDate = dto.reassignedDate;
+    req.reassignedTimeFrom = dto.reassignedTimeFrom;
+    req.reassignedTimeTo = dto.reassignedTimeTo;
+    req.status = RequestStatus.REASSIGNED;
 
-    request.reassignedDate = dto.reassignedDate;
-    request.reassignedTimeFrom = dto.reassignedTimeFrom;
-    request.reassignedTimeTo = dto.reassignedTimeTo;
-    request.status = RequestStatus.REASSIGNED;
+    // update/create approval details if provided
+    let approval = req.approval;
+    if (!approval) approval = this.approvalRepo.create();
+    if (dto.allowedMaterials) approval.allowedMaterials = dto.allowedMaterials;
+    if (dto.inspectionRequired !== undefined)
+      approval.inspectionRequired = dto.inspectionRequired;
+    approval = await this.approvalRepo.save(approval);
+    req.approval = approval;
 
-    let approval = request.approval;
-    if (!approval) {
-      approval = this.approvalRepo.create({
-        request,
-        allowedMaterials: dto.allowedMaterials,
-        inspectionRequired: dto.inspectionRequired,
-      });
-    } else {
-      if (dto.allowedMaterials)
-        approval.allowedMaterials = dto.allowedMaterials;
-      if (dto.inspectionRequired !== undefined)
-        approval.inspectionRequired = dto.inspectionRequired;
-    }
+    await this.requestRepo.save(req);
 
-    request.approval = await this.approvalRepo.save(approval);
-    const saved = await this.requestRepo.save(request);
-    return instanceToPlain(saved);
+    await this.notificationSvc.create({
+      type: 'request_reassigned',
+      message: `Request for ${req.customer.firstName} reassigned to ${dto.reassignedDate} ${dto.reassignedTimeFrom}`,
+      requestId: req.id,
+    });
+
+    return req;
   }
 
-  // Optional: list all approvals
-  async findAll() {
-    const approvals = await this.approvalRepo.find({ relations: ['request'] });
-    return instanceToPlain(approvals);
+  async cancel(requestId: string) {
+    const req = await this.requestRepo.findOne({
+      where: { id: requestId },
+      relations: ['customer', 'approval'],
+    });
+
+    if (!req) throw new NotFoundException('Request not found');
+
+    // Only pending or approved requests can be cancelled
+    if (
+      req.status !== RequestStatus.PENDING &&
+      req.status !== RequestStatus.APPROVED
+    ) {
+      throw new BadRequestException(
+        'Only pending or approved requests can be cancelled',
+      );
+    }
+
+    req.status = RequestStatus.CANCELLED;
+    await this.requestRepo.save(req);
+
+    // Optional: create notification
+    await this.notificationSvc.create({
+      type: 'request_cancelled',
+      message: `Request for ${req.customer.firstName} has been cancelled`,
+      requestId: req.id,
+    });
+
+    return req;
   }
 }

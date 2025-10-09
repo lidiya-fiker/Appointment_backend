@@ -1,63 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsDateString,
+  IsString,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateRequestDto {
-  // customer info (handled by front desk)
-  @ApiProperty()
-  @IsString()
-  firstName: string;
+  @ApiProperty() @IsNotEmpty() firstName: string;
+  @ApiProperty() @IsNotEmpty() lastName: string;
+  @ApiProperty() @IsEmail() email: string;
+  @ApiProperty() @IsNotEmpty() phone: string;
+  @ApiProperty({ required: false }) @IsOptional() gender?: string;
+  @ApiProperty({ required: false }) @IsOptional() country?: string;
+  @ApiProperty({ required: false }) @IsOptional() city?: string;
+  @ApiProperty({ required: false }) @IsOptional() organization?: string;
+  @ApiProperty({ required: false }) @IsOptional() occupation?: string;
 
-  @ApiProperty()
-  @IsString()
-  lastName: string;
-
-  @ApiProperty()
-  @IsEmail()
-  email: string;
-
-  @ApiProperty()
-  @IsString()
-  phone: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  gender: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  country: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  city: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  organization: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  occupation: string;
-
-  // appointment info
-  @ApiProperty()
-  @IsDateString()
-  appointmentDate: string;
-
-  @ApiProperty()
-  @IsString()
-  timeFrom: string;
-
-  @ApiProperty()
-  @IsString()
-  timeTo: string;
-
-  @ApiProperty()
-  @IsString()
-  purpose: string;
+  @ApiProperty() @IsDateString() appointmentDate: string;
+  @ApiProperty() @IsString() timeFrom: string;
+  @ApiProperty() @IsString() timeTo: string;
+  @ApiProperty() @IsString() purpose: string;
 }

@@ -5,6 +5,9 @@ import { Customer } from 'src/customers/customer.entity';
 import { IntegritySetting } from 'src/integrity/integriry.entity';
 import { Notification } from 'src/notifications/notification.entity';
 import { Request } from 'src/requests/request.entity';
+import { Permission } from 'src/roles/permission.entity';
+
+import { Role } from 'src/roles/role.entity';
 import { User } from 'src/user/user.entity';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
@@ -25,6 +28,8 @@ export const dataSourceOptions: DataSourceOptions = {
     IntegritySetting,
     Notification,
     CheckInOut,
+    Role,
+    Permission,
   ],
   subscribers: [],
 };

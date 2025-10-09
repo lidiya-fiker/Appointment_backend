@@ -2,15 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { seedSuperAdmin } from './auth/seed-super-admin';
+
 import { DataSource } from 'typeorm';
+import { seedRolesAndSuperAdmin } from './auth/seed-super-admin';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   const dataSource = app.get(DataSource);
-  await seedSuperAdmin(dataSource);
+  await seedRolesAndSuperAdmin(dataSource);
 
   const config = new DocumentBuilder()
     .setTitle('Auth API')
@@ -21,7 +22,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
+  app.enableCors();
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

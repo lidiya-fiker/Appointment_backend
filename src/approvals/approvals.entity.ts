@@ -1,5 +1,5 @@
-import { Request } from 'src/requests/request.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne } from 'typeorm';
+import { Request } from 'src/requests/request.entity';
 
 @Entity()
 export class Approval {
@@ -13,8 +13,8 @@ export class Approval {
   inspectionRequired: boolean;
 
   @Column('text', { array: true, nullable: true })
-  allowedMaterials?: string[]; // e.g., ['PC', 'Mobile']
+  allowedMaterials?: string[];
 
   @Column({ nullable: true })
-  reason?: string; // for rejection
+  reason?: string;
 }
