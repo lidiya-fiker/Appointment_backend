@@ -1,6 +1,12 @@
 import { Request } from 'src/requests/request.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
+export enum IntegrityTier {
+  GOLD = 'Gold',
+  SILVER = 'Silver',
+  BRONZE = 'Bronze',
+}
+
 @Entity()
 export class Customer {
   @PrimaryGeneratedColumn('uuid')
@@ -12,6 +18,9 @@ export class Customer {
   @Column()
   lastName: string;
 
+  @Column({ nullable: true })
+  middleName: string;
+
   @Column({ unique: true })
   email: string;
 
@@ -20,6 +29,9 @@ export class Customer {
 
   @Column()
   gender: string;
+
+  @Column({ nullable: true })
+  plateNum: string;
 
   @Column()
   country: string;
@@ -32,6 +44,9 @@ export class Customer {
 
   @Column()
   occupation: string;
+
+  @Column({ type: 'enum', enum: IntegrityTier, default: IntegrityTier.BRONZE })
+  integrityTier: IntegrityTier;
 
   @OneToMany(() => Request, (request) => request.customer)
   requests: Request[];

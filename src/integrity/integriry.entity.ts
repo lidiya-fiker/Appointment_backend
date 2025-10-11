@@ -10,9 +10,6 @@ export class IntegritySetting {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'enum', enum: Period })
-  period: Period;
-
   @Column({ type: 'jsonb' })
-  tiers: { name: string; visits: number }[]; // e.g. [{name: 'gold', visits:15},...]
+  tiers: { name: string; visits: number; period: Period }[];
 }

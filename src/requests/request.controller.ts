@@ -38,7 +38,6 @@ export class RequestsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get()
-  @ApiBearerAuth()
   async findAll(@Query() query: FilterRequestDto) {
     const { status, fromDate, toDate } = query;
     return this.svc.filter(status, fromDate, toDate);

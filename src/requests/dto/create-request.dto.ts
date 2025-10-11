@@ -10,9 +10,11 @@ import {
 export class CreateRequestDto {
   @ApiProperty() @IsNotEmpty() firstName: string;
   @ApiProperty() @IsNotEmpty() lastName: string;
+  @ApiProperty() @IsNotEmpty() middleName: string;
   @ApiProperty() @IsEmail() email: string;
   @ApiProperty() @IsNotEmpty() phone: string;
   @ApiProperty({ required: false }) @IsOptional() gender?: string;
+  @ApiProperty({ required: false }) @IsOptional() plateNum?: string;
   @ApiProperty({ required: false }) @IsOptional() country?: string;
   @ApiProperty({ required: false }) @IsOptional() city?: string;
   @ApiProperty({ required: false }) @IsOptional() organization?: string;

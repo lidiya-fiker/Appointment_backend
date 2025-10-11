@@ -15,7 +15,7 @@ import { Permission } from 'src/roles/permission.entity';
     TypeOrmModule.forFeature([User, Role, Permission]),
     JwtModule.register({
       secret: 'jakjgncrkyyh ruidfahyg idafygerauphg', // move to .env in real projects
-      signOptions: { expiresIn: '3h' },
+      signOptions: { expiresIn: '6h' },
     }),
   ],
   providers: [AuthService, JwtStrategy],

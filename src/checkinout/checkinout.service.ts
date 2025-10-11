@@ -92,4 +92,49 @@ export class CheckInOutService {
   async findByRequest(requestId: string) {
     return this.getOrCreateRecord(requestId);
   }
+
+  // Count completed requests per integrity tier
+  async countCompletedByTier() {
+    const result = await this.requestRepo
+      .createQueryBuilder('request')
+      .leftJoin('request.customer', 'customer')
+      .select('customer.integrityTier', 'tier')
+      .addSelect('COUNT(request.id)', 'completedCount')
+      .where('request.status = :status', { status: RequestStatus.COMPLETED })
+      .groupBy('customer.integrityTier')
+      .getRawMany();
+
+    return result.map((r) => ({
+      tier: r.tier,
+      completedCount: parseInt(r.completedCount, 10),
+    }));
+  }
+
+  // List customers per tier with completed requests
+  async listCompletedCustomersByTier() {
+    const requests = await this.requestRepo
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.customer', 'customer')
+      .where('request.status = :status', { status: RequestStatus.COMPLETED })
+      .select(['customer.id', 'customer.name', 'customer.integrityTier'])
+      .getMany();
+
+    const grouped: Record<string, any[]> = {};
+    requests.forEach((req) => {
+      const tier = req.customer.integrityTier || 'Unknown';
+      if (!grouped[tier]) grouped[tier] = [];
+      grouped[tier].push({
+        id: req.customer.id,
+        name: [
+          req.customer.firstName,
+          req.customer.middleName,
+          req.customer.lastName,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      });
+    });
+
+    return grouped;
+  }
 }

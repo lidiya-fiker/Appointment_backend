@@ -64,4 +64,18 @@ export class CheckInOutController {
   async getRecord(@Param('requestId') requestId: string) {
     return this.checkService.findByRequest(requestId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('completed/by-tier')
+  completedByTier() {
+    return this.checkService.countCompletedByTier();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('completed/customers')
+  completedCustomers() {
+    return this.checkService.listCompletedCustomersByTier();
+  }
 }
