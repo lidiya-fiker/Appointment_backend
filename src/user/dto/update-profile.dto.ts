@@ -3,27 +3,32 @@ import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { Gender } from '../user.entity';
 
 export class UpdateProfileDto {
-  @ApiPropertyOptional({ description: 'First name of the user' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   firstName?: string;
 
-  @ApiPropertyOptional({ description: 'Last name of the user' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   lastName?: string;
 
-  @ApiPropertyOptional({ description: 'Phone number of the user' })
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  middleName?: string;
+
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiPropertyOptional({ enum: Gender, description: 'Gender of the user' })
+  @ApiPropertyOptional({ enum: Gender })
   @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
 
-  @ApiPropertyOptional({ description: 'Profile photo URL' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   photo?: string;

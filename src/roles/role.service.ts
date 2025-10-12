@@ -28,5 +28,7 @@ export class RoleService {
     return this.roleRepo.findOne({ where: { name } });
   }
 
-  // add/remove permission etc...
+  async findAllRoles(): Promise<Role[]> {
+    return this.roleRepo.find({ relations: ['permissions'] });
+  }
 }

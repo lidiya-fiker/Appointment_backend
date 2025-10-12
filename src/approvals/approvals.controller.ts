@@ -5,32 +5,27 @@ import { RejectRequestDto } from './dto/reject-request.dto';
 import { ReassignRequestDto } from './dto/reassign-request.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
-import { Permission } from 'src/common/decorators/permissions.decorator';
 
 @ApiTags('Approvals')
 @Controller('approvals')
 export class ApprovalsController {
   constructor(private svc: ApprovalsService) {}
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permission('approve_request')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post(':id/approve')
   approve(@Param('id') id: string, @Body() dto: ApproveRequestDto) {
     return this.svc.approve(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permission('approve_request')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post(':id/reject')
   reject(@Param('id') id: string, @Body() dto: RejectRequestDto) {
     return this.svc.reject(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permission('approve_request')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post(':id/reassign')
   reassign(@Param('id') id: string, @Body() dto: ReassignRequestDto) {

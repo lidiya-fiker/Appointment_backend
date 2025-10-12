@@ -67,6 +67,22 @@ export class RequestsService {
     });
   }
 
+  async findCompleted() {
+    return this.requestRepo.find({
+      where: { status: RequestStatus.COMPLETED },
+      relations: ['customer', 'approval'],
+      order: { appointmentDate: 'ASC' },
+    });
+  }
+
+  async findRejected() {
+    return this.requestRepo.find({
+      where: { status: RequestStatus.REJECTED },
+      relations: ['customer', 'approval'],
+      order: { appointmentDate: 'ASC' },
+    });
+  }
+
   //approved requests
   async findApproved() {
     return this.requestRepo.find({
@@ -74,6 +90,25 @@ export class RequestsService {
       relations: ['customer', 'approval'],
       order: { appointmentDate: 'ASC' },
     });
+  }
+
+  async findReassigned() {
+    return this.requestRepo.find({
+      where: { status: RequestStatus.REASSIGNED },
+      relations: ['customer', 'approval'],
+      order: { appointmentDate: 'ASC' },
+    });
+  }
+
+  async getDashboardCounts() {
+    const [approved, rejected, completed, pending] = await Promise.all([
+      this.requestRepo.count({ where: { status: RequestStatus.APPROVED } }),
+      this.requestRepo.count({ where: { status: RequestStatus.REJECTED } }),
+      this.requestRepo.count({ where: { status: RequestStatus.COMPLETED } }),
+      this.requestRepo.count({ where: { status: RequestStatus.PENDING } }),
+    ]);
+
+    return { approved, rejected, completed, pending };
   }
 
   async filter(status?: RequestStatus, from?: string, to?: string) {

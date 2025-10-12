@@ -13,12 +13,8 @@ import {
 import { RequestsService } from './request.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/user/user.entity';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
-import { Permission } from 'src/common/decorators/permissions.decorator';
 import { FilterRequestDto } from './dto/filter-request.dto';
 
 @ApiTags('Requests')
@@ -26,8 +22,7 @@ import { FilterRequestDto } from './dto/filter-request.dto';
 export class RequestsController {
   constructor(private readonly svc: RequestsService) {}
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permission('create_appointment')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post()
   async create(@Body() dto: CreateRequestDto, @Req() req) {
@@ -64,17 +59,43 @@ export class RequestsController {
     return this.svc.findApproved();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @Roles('front_desk', 'ceo')
+  @Get('reassigned')
+  async findReassigned() {
+    return this.svc.findReassigned();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('completed')
+  async findCompleted() {
+    return this.svc.findCompleted();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('rejected')
+  async findRejected() {
+    return this.svc.findRejected();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('dashboard')
+  async getDashboard() {
+    return this.svc.getDashboardCounts();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: any) {
     return this.svc.update(id, body);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @Roles('front_desk', 'ceo')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.svc.remove(id);
