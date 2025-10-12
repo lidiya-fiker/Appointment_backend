@@ -16,6 +16,6 @@ export class IntegritySetting {
   @Column({ type: 'enum', enum: Period })
   period: Period;
 
-  @Column()
+  @Column({ type: 'int' })
   visits: number;
 }

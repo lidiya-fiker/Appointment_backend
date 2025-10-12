@@ -57,6 +57,13 @@ export class RequestsController {
     return this.svc.findPending();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('approved')
+  async findApproved() {
+    return this.svc.findApproved();
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles('front_desk', 'ceo')

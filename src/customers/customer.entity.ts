@@ -4,7 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 export enum IntegrityTier {
   GOLD = 'Gold',
   SILVER = 'Silver',
-  BRONZE = 'Bronze',
+  PLATINUM = 'Platinum',
 }
 
 @Entity()
@@ -45,8 +45,8 @@ export class Customer {
   @Column()
   occupation: string;
 
-  @Column({ type: 'enum', enum: IntegrityTier, default: IntegrityTier.BRONZE })
-  integrityTier: IntegrityTier;
+  @Column({ type: 'enum', enum: IntegrityTier, nullable: true })
+  integrityTier: IntegrityTier | null;
 
   @OneToMany(() => Request, (request) => request.customer)
   requests: Request[];

@@ -66,6 +66,13 @@ export class RequestsService {
       order: { appointmentDate: 'ASC' },
     });
   }
+  async findApproved() {
+    return this.requestRepo.find({
+      where: { status: RequestStatus.APPROVED },
+      relations: ['customer', 'approval'],
+      order: { appointmentDate: 'ASC' },
+    });
+  }
 
   async filter(status?: RequestStatus, from?: string, to?: string) {
     const where: any = {};

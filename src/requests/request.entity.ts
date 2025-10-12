@@ -34,7 +34,7 @@ export class Request {
   createdBy: User;
 
   @Column({ type: 'date' })
-  appointmentDate: string;
+  appointmentDate: Date;
 
   @Column()
   timeFrom: string;
