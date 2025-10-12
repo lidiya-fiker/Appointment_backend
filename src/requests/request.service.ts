@@ -66,6 +66,8 @@ export class RequestsService {
       order: { appointmentDate: 'ASC' },
     });
   }
+
+  //approved requests
   async findApproved() {
     return this.requestRepo.find({
       where: { status: RequestStatus.APPROVED },

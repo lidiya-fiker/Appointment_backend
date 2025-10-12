@@ -56,7 +56,7 @@ export class RequestsController {
   async findPending() {
     return this.svc.findPending();
   }
-
+  //approved requests
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('approved')
