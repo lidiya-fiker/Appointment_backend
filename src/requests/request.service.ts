@@ -59,6 +59,14 @@ export class RequestsService {
     });
   }
 
+  async findPending() {
+    return this.requestRepo.find({
+      where: { status: RequestStatus.PENDING },
+      relations: ['customer', 'approval'],
+      order: { appointmentDate: 'ASC' },
+    });
+  }
+
   async filter(status?: RequestStatus, from?: string, to?: string) {
     const where: any = {};
     if (status) where.status = status;

@@ -8,12 +8,11 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-
-import { CreateIntegritySettingDto } from './dto/create-integrity-setting.dto';
-import { UpdateIntegritySettingDto } from './dto/update-integrity-setting.dto';
-import { IntegritySettingService } from './integrity.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { IntegritySettingService } from './integrity.service';
+import { CreateIntegritySettingDto } from './dto/create-integrity-setting.dto';
+import { UpdateIntegritySettingDto } from './dto/update-integrity-setting.dto';
 
 @ApiTags('Integrity Settings')
 @Controller('integrity-settings')

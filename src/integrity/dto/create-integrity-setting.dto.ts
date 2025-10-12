@@ -1,36 +1,19 @@
-import {
-  IsArray,
-  ValidateNested,
-  IsString,
-  IsNumber,
-  IsEnum,
-  IsNotEmpty,
-  Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { Period } from '../integriry.entity';
+import { IsString, IsEnum, IsNumber, Min, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Period } from '../integriry.entity';
 
-class TierDto {
-  @ApiProperty({ example: 'gold' })
+export class CreateIntegritySettingDto {
+  @ApiProperty({ example: 'Gold' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 15 })
-  @IsNumber()
-  @Min(1)
-  visits: number;
-
   @ApiProperty({ enum: Period, example: Period.MONTH })
   @IsEnum(Period)
   period: Period;
-}
 
-export class CreateIntegritySettingDto {
-  @ApiProperty()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => TierDto)
-  tiers: TierDto[];
+  @ApiProperty({ example: 7 })
+  @IsNumber()
+  @Min(1)
+  visits: number;
 }

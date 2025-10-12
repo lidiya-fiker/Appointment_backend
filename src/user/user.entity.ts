@@ -9,7 +9,6 @@ import {
 import { Role } from 'src/roles/role.entity';
 import { Exclude } from 'class-transformer';
 import { Request } from 'src/requests/request.entity';
-
 export enum Gender {
   MALE = 'male',
   FEMALE = 'female',

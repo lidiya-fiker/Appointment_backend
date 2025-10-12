@@ -50,6 +50,13 @@ export class RequestsController {
     return this.svc.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('pending')
+  async findPending() {
+    return this.svc.findPending();
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles('front_desk', 'ceo')
