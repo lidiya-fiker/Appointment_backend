@@ -19,7 +19,6 @@ export class CreateRequestDto {
   @ApiProperty({ required: false }) @IsOptional() city?: string;
   @ApiProperty({ required: false }) @IsOptional() organization?: string;
   @ApiProperty({ required: false }) @IsOptional() occupation?: string;
-
   @ApiProperty() @IsDateString() appointmentDate: string;
   @ApiProperty() @IsString() timeFrom: string;
   @ApiProperty() @IsString() timeTo: string;

@@ -5,6 +5,7 @@ import { Request, RequestStatus } from './request.entity';
 import { Customer } from 'src/customers/customer.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { User } from 'src/user/user.entity';
+import { UpdateRequestDto } from './dto/update-request.dto';
 
 @Injectable()
 export class RequestsService {
@@ -121,20 +122,65 @@ export class RequestsService {
     });
   }
 
-  async update(id: string, update: Partial<Request>) {
+  async update(id: string, dto: UpdateRequestDto) {
+    // 1️⃣ Fetch the request with its customer
     const req = await this.requestRepo.findOne({
       where: { id },
-      relations: ['customer'],
+      relations: [
+        'customer',
+        'createdBy',
+        'createdBy.role',
+        'createdBy.role.permissions',
+      ],
     });
+
     if (!req) throw new NotFoundException('Request not found');
 
-    Object.assign(req, update);
-    // if nested customer updated (sent as object on update.customer), save it separately:
-    if ((update as any).customer) {
-      Object.assign(req.customer, (update as any).customer);
-      await this.customerRepo.save(req.customer);
+    // 2️⃣ Update customer safely
+    if (dto.customer) {
+      const customer = await this.customerRepo.findOne({
+        where: { id: req.customer.id },
+      });
+      if (!customer) throw new NotFoundException('Customer not found');
+
+      // Check for email uniqueness
+      if (dto.customer.email && dto.customer.email !== customer.email) {
+        const existingEmail = await this.customerRepo.findOne({
+          where: { email: dto.customer.email },
+        });
+        if (existingEmail && existingEmail.id !== customer.id) {
+          throw new Error('Email already in use by another customer');
+        }
+      }
+
+      // Update allowed fields
+      Object.assign(customer, dto.customer);
+      await this.customerRepo.save(customer); // safe UPDATE
+
+      // Assign managed entity back to request to prevent TypeORM trying to insert
+      req.customer = customer;
     }
-    return this.requestRepo.save(req);
+
+    // 3️⃣ Update request fields (excluding nested customer)
+    const { customer, ...requestFields } = dto; // remove nested customer from dto
+    Object.assign(req, requestFields);
+
+    try {
+      await this.requestRepo.save(req); // safe UPDATE
+    } catch (error) {
+      throw new Error('Failed to update request: ' + error.message);
+    }
+
+    // 4️⃣ Return the updated request with relations
+    return this.requestRepo.findOne({
+      where: { id },
+      relations: [
+        'customer',
+        'createdBy',
+        'createdBy.role',
+        'createdBy.role.permissions',
+      ],
+    });
   }
 
   async remove(id: string) {

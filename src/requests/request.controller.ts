@@ -13,9 +13,10 @@ import {
 import { RequestsService } from './request.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/user/user.entity';
 import { FilterRequestDto } from './dto/filter-request.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
 
 @ApiTags('Requests')
 @Controller('requests')
@@ -90,8 +91,9 @@ export class RequestsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.svc.update(id, body);
+  @ApiBody({ type: UpdateRequestDto })
+  async update(@Param('id') id: string, @Body() dto: UpdateRequestDto) {
+    return this.svc.update(id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
