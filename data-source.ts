@@ -16,7 +16,7 @@ export const dataSourceOptions: DataSourceOptions = {
   host: 'localhost',
   port: 5433,
   username: 'postgres',
-  password: 'kidiya',
+  password: 'good',
   database: 'appointment',
   synchronize: true,
   logging: true,

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { JwtPayload } from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/user/user.entity';
@@ -15,7 +16,7 @@ import { Permission } from 'src/roles/permission.entity';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ROLES } from 'src/roles/roles.constants';
-
+import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class AuthService {
   constructor(
@@ -165,5 +166,74 @@ export class AuthService {
 
     await this.roleRepo.save(role);
     return role;
+  }
+
+  // 🔹 CEO SELF-REGISTRATION (only if no CEO exists yet)
+  async registerCEO(dto: SignupDto): Promise<User> {
+    const existingCEO = await this.userRepo.findOne({
+      where: { role: { name: 'CEO' } },
+      relations: ['role'],
+    });
+    if (existingCEO) {
+      throw new BadRequestException('A CEO account already exists');
+    }
+
+    const { email, password, firstName, lastName, middleName } = dto;
+
+    const existingUser = await this.userRepo.findOne({ where: { email } });
+    if (existingUser) throw new BadRequestException('Email already registered');
+
+    const ceoRole = await this.roleRepo.findOne({
+      where: { name: 'CEO' },
+      relations: ['permissions'],
+    });
+    if (!ceoRole) throw new BadRequestException('CEO role not found');
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const ceo = this.userRepo.create({
+      firstName,
+      lastName,
+      middleName,
+      email,
+      password: hashedPassword,
+      role: ceoRole,
+    });
+
+    return await this.userRepo.save(ceo);
+  }
+  async ceoExists(): Promise<{ exists: boolean }> {
+    const existingCEO = await this.userRepo.findOne({
+      where: { role: { name: 'CEO' } },
+      relations: ['role'],
+    });
+    return { exists: !!existingCEO };
+  }
+
+  // 🔹 SEND PASSWORD RESET LINK
+  async forgotPassword(email: string, mailerService: MailerService) {
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) throw new BadRequestException('User not found');
+
+    const token = this.jwtService.sign({ sub: user.id }, { expiresIn: '15m' });
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+    await mailerService.sendMail({
+      to: email,
+      subject: 'Password Reset Request',
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. </p>`,
+    });
+
+    return { message: 'Password reset link sent to your email' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const payload: any = this.jwtService.verify(token);
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await this.userRepo.update({ id: payload.sub }, { password: hashed });
+      return { message: 'Password updated successfully' };
+    } catch {
+      throw new BadRequestException('Invalid or expired token');
+    }
   }
 }

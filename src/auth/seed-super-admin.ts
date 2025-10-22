@@ -43,28 +43,28 @@ export async function seedRolesAndSuperAdmin(dataSource: DataSource) {
       console.log(`🧩 Role created: ${roleName}`);
     }
   }
-
-  // 3️⃣ Create CEO user if not exists
-  const ceoRole = await roleRepo.findOne({
-    where: { name: 'CEO' },
-    relations: ['permissions'],
-  });
-  const existingCeo = await userRepo.findOne({
-    where: { email: 'ceo@company.com' },
-  });
-
-  if (!existingCeo) {
-    const hashedPassword = await bcrypt.hash('superadmin123', 10);
-    const ceo = userRepo.create({
-      firstName: 'System',
-      lastName: 'CEO',
-      email: 'ceo@company.com',
-      password: hashedPassword,
-      role: ceoRole,
-    });
-    await userRepo.save(ceo);
-    console.log('✅ Super Admin (CEO) created with all permissions');
-  } else {
-    console.log('✅ Super Admin (CEO) already exists');
-  }
 }
+  // 3️⃣ Create CEO user if not exists
+//   const ceoRole = await roleRepo.findOne({
+//     where: { name: 'CEO' },
+//     relations: ['permissions'],
+//   });
+//   const existingCeo = await userRepo.findOne({
+//     where: { email: 'ceo@company.com' },
+//   });
+
+//   if (!existingCeo) {
+//     const hashedPassword = await bcrypt.hash('superadmin123', 10);
+//     const ceo = userRepo.create({
+//       firstName: 'System',
+//       lastName: 'CEO',
+//       email: 'ceo@company.com',
+//       password: hashedPassword,
+//       role: ceoRole,
+//     });
+//     await userRepo.save(ceo);
+//     console.log('✅ Super Admin (CEO) created with all permissions');
+//   } else {
+//     console.log('✅ Super Admin (CEO) already exists');
+//   }
+// }

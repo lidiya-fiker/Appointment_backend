@@ -8,7 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule } from '@nestjs/config';
 import { Role } from 'src/roles/role.entity';
 import { Permission } from 'src/roles/permission.entity';
-
+import { MailerModule } from '@nestjs-modules/mailer';
 @Module({
   imports: [
     ConfigModule,
@@ -17,7 +17,21 @@ import { Permission } from 'src/roles/permission.entity';
       secret: 'jakjgncrkyyh ruidfahyg idafygerauphg', // move to .env in real projects
       signOptions: { expiresIn: '6h' },
     }),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.SMTP_HOST,
+        port: +process.env.SMTP_PORT,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      },
+      defaults: {
+        from: '"No Reply" <noreply@example.com>',
+      },
+    }),
   ],
+
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
 })
