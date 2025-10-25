@@ -19,7 +19,7 @@ export const dataSourceOptions: DataSourceOptions = {
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   synchronize: process.env.NODE_ENV !== 'production', // optional: consider false in production
-  logging: true,
+  logging: process.env.NODE_ENV !== 'production',
   entities: [
     User,
     Request,
