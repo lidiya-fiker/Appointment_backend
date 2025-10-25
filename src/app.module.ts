@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { dataSourceOptions } from 'data-source';
+
 import { UserModule } from './user/user.module';
 import { RequestModule } from './requests/request.module';
 
@@ -13,6 +13,7 @@ import { CheckInOutModule } from './checkinout/checkinout.module';
 import { AuthModule } from './auth/auth.module';
 import { ApprovalModule } from './approvals/approvals.module';
 import { RoleModule } from './roles/role.module';
+import { dataSourceOptions } from './data-source';
 
 @Module({
   imports: [
